@@ -4,6 +4,7 @@
 #include "includes/binary_includes.hpp"
 #include "naive_jarnik_prim.hpp"
 #include "naive_kruskal.hpp"
+#include "interval_maximum_filter.hpp"
 
 namespace mst_construction {
 namespace params {
@@ -44,6 +45,11 @@ constexpr std::tuple contenders{
                   return fast_kruskal(el, n);
                 };
               }},
+
+    // I-Max-Filter Algorithm implemeted by Jens Kienle and Simon Vögele
+    Contender{"kv_intervall_maximum_filter",
+              [] { return kv_intervall_maximum_filter::intervall_maximum_filter();
+    }},
 
     // Jarnik-Prim with inefficient addressable PQ
 //    Contender{"naive_jarnik_prim", [] { return NaiveJarnikPrim(); }},
