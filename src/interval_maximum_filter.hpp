@@ -54,7 +54,7 @@ namespace kv_intervall_maximum_filter {
       std::sort(adjacency_array.begin(), adjacency_array.end(), algen::TailHeadOrder<algen::WEdge>());
 
       algen::VertexId current_vertex = 0;
-      adjacency_array_borders.push_back(0);
+      adjacency_array_borders[0] = 0;
       for (algen::VertexId i = 0; i < adjacency_array.size(); i++) {
         if (adjacency_array[i].tail != current_vertex) {
           algen::VertexId next_vertex = adjacency_array[i].tail;
@@ -66,13 +66,6 @@ namespace kv_intervall_maximum_filter {
       }
       for (long j = 0; j < num_vertices - current_vertex; j++) {
         adjacency_array_borders[num_vertices-j] = adjacency_array.size();
-      }
-
-      for (long i = 0; i < num_vertices; i++) {
-        std::cout << "\nVertex: " << i << ":" << adjacency_array_borders[i] << "\n";
-        for (long j = adjacency_array_borders[i]; j < adjacency_array_borders[i+1]; j++) {
-          std::cout << "," << adjacency_array[j];
-        }
       }
     }
 
