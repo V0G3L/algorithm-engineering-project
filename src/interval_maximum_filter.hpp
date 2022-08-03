@@ -55,13 +55,16 @@ namespace kv_intervall_maximum_filter {
       algen::VertexArray parent(num_vertices, algen::VERTEXID_UNDEFINED); // saves the parent from which the vertex is currently reached
       while(!q.empty()) {
           current = q.top();
-          //add the vertex that reaches current to the mst unless current is the root of a tree in the MSF
+          //add the edge that reaches current to the mst unless current is the root of a tree in the MSF
+          algen::Weight weight = algen::WEIGHT_MAX;
           if(parent[current] != algen::VERTEXID_UNDEFINED) {
-            mst.push_back(algen::WEdge(parent[current], current, q.get_key(current)));
+            weight = q.get_key(current);
+            mst.push_back(algen::WEdge(parent[current], current, weight));
           }
           q.pop();
           //document the JP order
           if(need_filtering_data) {
+            mst_edge_weights.push_back(weight);
             renumbering[current] = counter;
             counter ++;
           }
