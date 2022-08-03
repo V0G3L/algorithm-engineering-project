@@ -103,7 +103,35 @@ namespace kv_intervall_maximum_filter {
     // Constructs a binary tree of prefix and suffix maxima that can be used to find interval maxima
     void construct_prefix_suffix_binary_tree(const algen::WeightArray& weights,
                                         const algen::VertexId num_vertices) {
-      //TODO construct the binary tree for the interval maximum search here
+      uint64_t size = next_pow2(num_vertices);
+      uint64_t layers = log2(size);
+      prefix_suffix_binary_tree = std::vector<std::vector<algen::Weight>>(layers);
+      prefix_suffix_binary_tree[0] = weights;
+      for (long l = 1; l < layers; l++) {
+        prefix_suffix_binary_tree[l] = std::vector<algen::Weight>(size);
+        for (long i = 0; i < size; i++) {
+          long b = i/(pow(2,l));
+          if (b % 2 == 1) {
+            prefix_suffix_binary_tree[l][i] = find_maximum(weights ,pow(2,l) * b, i);
+          } else {
+            prefix_suffix_binary_tree[l][i] = find_maximum(weights , i,pow(2,l)*(b+1)-1);
+          }
+        }
+      }
+    }
+
+    algen::Weight find_maximum(const algen::WeightArray& weights, uint64_t l, uint64_t r) {
+      long max = 0;
+      for (long j = l; j <= r; j++) {
+        if (weights[j] > max) {
+          max = weights[j];
+        }
+      }
+      return max;
+    }
+
+    uint64_t next_pow2(uint64_t x) {
+      return x == 1 ? 1 : 1<<(64-__builtin_clzl(x-1));
     }
 
     algen::WEdgeList adjacency_array;
