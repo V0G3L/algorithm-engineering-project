@@ -1,11 +1,12 @@
 #pragma once
 
 #include "includes/definitions.hpp"
+#include "src/datastructures/priority_queue.hpp"
 
 namespace kv_intervall_maximum_filter {
   // This is an implementation of the I-Max-filter algorithm presented in this paper https://link.springer.com/chapter/10.1007/978-3-540-39658-1_61
   // Implemented by Jens Kienle and Simon Vögele
-  class intervall_maximum_filter {
+  class IntervallMaximumFilter {
 
   public:
     algen::WEdgeList operator()(const algen::WEdgeList& edge_list,
@@ -37,11 +38,41 @@ namespace kv_intervall_maximum_filter {
     algen::WEdgeList jarnik_prim(const algen::WEdgeList& edge_list,
                                  const algen::VertexId num_vertices,
                                  const bool need_filtering_data,
-                                 const algen::WeightArray& mst_edge_weights,
-                                 const algen::VertexArray& renumbering) {
+                                 algen::WeightArray& mst_edge_weights,
+                                 algen::VertexArray& renumbering) {
       construct_adjacency_array(edge_list, num_vertices);
-      //TODO actually do JP
       algen::WEdgeList mst;
+
+      // initialise priority queue
+      PriorityQueue q; //TODO implement a priority queue in src/datastructures/priority_queue.hpp
+      q.push(0, 0);
+      for (long i = 1; i < num_vertices; i++) {
+        q.push(i, algen::VERTEXID_UNDEFINED);
+      }
+      algen::VertexId current;
+
+      long counter = 0; // to count the JP order. 0 being the first vertex added to the mst, num_vertices being the last
+      algen::VertexArray parent(num_vertices, algen::VERTEXID_UNDEFINED); // saves the parent from which the vertex is currently reached
+      while(!q.empty()) {
+          current = q.top();
+          //add the vertex that reaches current to the mst unless current is the root of a tree in the MSF
+          if(parent[current] != algen::VERTEXID_UNDEFINED) {
+            mst.push_back(algen::WEdge(parent[current], current, q.get_key(current)));
+          }
+          q.pop();
+          //document the JP order
+          if(need_filtering_data) {
+            renumbering[current] = counter;
+            counter ++;
+          }
+          //update parent vertices and edges if needed
+          for (long i = adjacency_array_borders[current]; i < adjacency_array_borders[current + 1]; i++) {
+            if(edge_list[i].weight < q.get_key(edge_list[i].head)) {
+              q.set_key(edge_list[i].head, edge_list[i].weight);
+              parent[edge_list[i].head] = current;
+            }
+          }
+      }
       return mst;
     }
 
@@ -55,7 +86,7 @@ namespace kv_intervall_maximum_filter {
 
       algen::VertexId current_vertex = 0;
       adjacency_array_borders[0] = 0;
-      for (algen::VertexId i = 0; i < adjacency_array.size(); i++) {
+      for (long i = 0; i < adjacency_array.size(); i++) {
         if (adjacency_array[i].tail != current_vertex) {
           algen::VertexId next_vertex = adjacency_array[i].tail;
           for (long j = 0; j < adjacency_array[i].tail - current_vertex; j++) {
