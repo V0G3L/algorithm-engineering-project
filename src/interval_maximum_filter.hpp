@@ -25,8 +25,10 @@ namespace kv_intervall_maximum_filter {
       //TODO filtering here
       algen::WEdgeList filtered_edge_list;
 
-      algen::WEdgeList mst = jarnik_prim(filtered_edge_list, num_vertices, false, algen::WeightArray() , algen::VertexArray());
-      //TODO push reverse edges
+      algen::WEdgeList mst = jarnik_prim(filtered_edge_list, num_vertices, false, weights , renumbering);
+      for (long i = 0; i < mst.size(); i++) {
+        mst.push_back(algen::WEdge(mst[i].head, mst[i].tail, mst[i].weight));
+      }
       return mst;
     }
 

@@ -48,7 +48,7 @@ constexpr std::tuple contenders{
 
     // I-Max-Filter Algorithm implemeted by Jens Kienle and Simon Vögele
     Contender{"kv_intervall_maximum_filter",
-              [] { return kv_intervall_maximum_filter::intervall_maximum_filter();
+              [] { return kv_intervall_maximum_filter::IntervallMaximumFilter();
     }},
 
     // Jarnik-Prim with inefficient addressable PQ
