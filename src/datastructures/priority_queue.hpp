@@ -41,6 +41,7 @@ private:
       minIndex = rightChild(target);
     }
 
+    //swap target with the smaller child
     if(minIndex != target) {
       swap(minIndex, target);
       shiftDown(minIndex);
