@@ -15,8 +15,7 @@ namespace kv_intervall_maximum_filter {
       algen::WeightArray weights;
       algen::VertexArray renumbering(num_vertices, algen::VERTEXID_UNDEFINED);
 
-      //TODO sampling here
-      algen::WEdgeList sample_edges;
+      algen::WEdgeList sample_edges = random_subset(edge_list);
 
       algen::WEdgeList sample_mst = jarnik_prim(sample_edges, num_vertices, true, weights, renumbering);
 
@@ -137,6 +136,18 @@ namespace kv_intervall_maximum_filter {
 
     uint64_t next_pow2(uint64_t x) {
       return x == 1 ? 1 : 1<<(64-__builtin_clzl(x-1));
+    }
+
+    //very naive and intuitive function to get a random subset of a given list of edges
+    algen::WEdgeList random_subset(algen::WEdgeList source) {
+        auto gen = std::mt19937(std::random_device()());
+        auto distr = std::uniform_int_distribution<algen::VertexId>(0, 9);  //adjust the range to change the size of the random sample 
+        algen::WEdgeList output;
+        for (long i = 0; i < source.size(); i++) {
+            if(distr(gen) == 0) {
+              output.push_back(source[i]);
+            }
+        }
     }
 
     algen::WEdgeList adjacency_array;
