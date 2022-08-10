@@ -55,10 +55,15 @@ namespace kv_intervall_maximum_filter {
       algen::WEdgeList mst;
 
       // initialise priority queue
+<<<<<<< HEAD
       PriorityQueue q;
       q.push(std::pair<algen::Weight, algen::VertexId>(0, 0));
+=======
+      PriorityQueue q; //TODO implement a priority queue in src/datastructures/priority_queue.hpp
+      q.push({0, 0});
+>>>>>>> c68ae09 (a minor style fix for a more clean initialization of pairs to increase readability)
       for (long i = 1; i < num_vertices; i++) {
-        q.push(std::pair<algen::Weight, algen::VertexId>(algen::WEIGHT_MAX, i));
+        q.push({algen::WEIGHT_MAX, i});
       }
       std::pair<algen::Weight, algen::VertexId> current;
 
