@@ -32,9 +32,9 @@ namespace kv_intervall_maximum_filter {
           sample_mst.push_back(cur);
         }
       }
-      algen::WEdgeList filtered_edge_list;
 
-      algen::WEdgeList mst = jarnik_prim(filtered_edge_list, num_vertices, false, weights , renumbering);
+      algen::WEdgeList mst = jarnik_prim(sample_mst, num_vertices, false, weights , renumbering);
+      // Push reverse edges
       for (long i = 0; i < mst.size(); i++) {
         mst.push_back(algen::WEdge(mst[i].head, mst[i].tail, mst[i].weight));
       }
@@ -55,7 +55,7 @@ namespace kv_intervall_maximum_filter {
       algen::WEdgeList mst;
 
       // initialise priority queue
-      PriorityQueue q; //TODO implement a priority queue in src/datastructures/priority_queue.hpp
+      PriorityQueue q;
       q.push(std::pair<algen::Weight, algen::VertexId>(0, 0));
       for (long i = 1; i < num_vertices; i++) {
         q.push(std::pair<algen::Weight, algen::VertexId>(algen::WEIGHT_MAX, i));
@@ -65,25 +65,25 @@ namespace kv_intervall_maximum_filter {
       long counter = 0; // to count the JP order. 0 being the first vertex added to the mst, num_vertices being the last
       algen::VertexArray parent(num_vertices, algen::VERTEXID_UNDEFINED); // saves the parent from which the vertex is currently reached
       while(!q.empty()) {
-          current = q.top();
-          //add the edge that reaches current to the mst unless current is the root of a tree in the MSF
-          if(parent[current.second] != algen::VERTEXID_UNDEFINED) {
-            mst.push_back(algen::WEdge(parent[current.second], current.second, current.first));
+        current = q.top();
+        //add the edge that reaches current to the mst unless current is the root of a tree in the MSF
+        if(parent[current.second] != algen::VERTEXID_UNDEFINED) {
+          mst.push_back(algen::WEdge(parent[current.second], current.second, current.first));
+        }
+        q.pop();
+        //document the JP order
+        if(need_filtering_data) {
+          mst_edge_weights.push_back(current.first);
+          renumbering[current.second] = counter;
+          counter ++;
+        }
+        //update parent vertices and edges if needed
+        for (long i = adjacency_array_borders[current.second]; i < adjacency_array_borders[current.second + 1]; i++) {
+          if(edge_list[i].weight < q.get_key(edge_list[i].head)) {
+            q.set_key(edge_list[i].head, edge_list[i].weight);
+            parent[edge_list[i].head] = current.second;
           }
-          q.pop();
-          //document the JP order
-          if(need_filtering_data) {
-            mst_edge_weights.push_back(current.first);
-            renumbering[current.second] = counter;
-            counter ++;
-          }
-          //update parent vertices and edges if needed
-          for (long i = adjacency_array_borders[current.second]; i < adjacency_array_borders[current.second + 1]; i++) {
-            if(edge_list[i].weight < q.get_key(edge_list[i].head)) {
-              q.set_key(edge_list[i].head, edge_list[i].weight);
-              parent[edge_list[i].head] = current.second;
-            }
-          }
+        }
       }
       return mst;
     }
@@ -116,7 +116,7 @@ namespace kv_intervall_maximum_filter {
     void construct_prefix_suffix_binary_tree(std::vector<algen::Weight>& weights,
                                         const algen::VertexId num_vertices) {
       uint64_t size = next_pow2(num_vertices);
-      weights.insert(weights.end(), size - weights.size(), std::numeric_limits<algen::Weight>::min());
+      weights.insert(weights.end(), size - weights.size(), WEIGHT_MIN);
       uint64_t layers = log2(size);
       prefix_suffix_binary_tree = std::vector<std::vector<algen::Weight>>(layers);
       prefix_suffix_binary_tree[0] = weights;
@@ -153,14 +153,14 @@ namespace kv_intervall_maximum_filter {
 
     //very naive and intuitive function to get a random subset of a given list of edges
     algen::WEdgeList random_subset(algen::WEdgeList source) {
-        auto gen = std::mt19937(std::random_device()());
-        auto distr = std::uniform_int_distribution<algen::VertexId>(0, 9);  //adjust the range to change the size of the random sample
-        algen::WEdgeList output;
-        for (long i = 0; i < source.size(); i++) {
-            if(distr(gen) == 0) {
-              output.push_back(source[i]);
-            }
+      auto gen = std::mt19937(std::random_device()());
+      auto distr = std::uniform_int_distribution<algen::VertexId>(0, 9);  //adjust the range to change the size of the random sample
+      algen::WEdgeList output;
+      for (long i = 0; i < source.size(); i++) {
+        if(distr(gen) == 0) {
+          output.push_back(source[i]);
         }
+      }
     }
 
     // Returns the position of the most significant non zero bit
