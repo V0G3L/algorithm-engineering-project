@@ -56,34 +56,32 @@ namespace kv_intervall_maximum_filter {
 
       // initialise priority queue
       PriorityQueue q; //TODO implement a priority queue in src/datastructures/priority_queue.hpp
-      q.push(0, 0);
+      q.push(std::pair<algen::Weight, algen::VertexId>(0, 0));
       for (long i = 1; i < num_vertices; i++) {
-        q.push(i, algen::VERTEXID_UNDEFINED);
+        q.push(std::pair<algen::Weight, algen::VertexId>(algen::WEIGHT_MAX, i));
       }
-      algen::VertexId current;
+      std::pair<algen::Weight, algen::VertexId> current;
 
       long counter = 0; // to count the JP order. 0 being the first vertex added to the mst, num_vertices being the last
       algen::VertexArray parent(num_vertices, algen::VERTEXID_UNDEFINED); // saves the parent from which the vertex is currently reached
       while(!q.empty()) {
           current = q.top();
           //add the edge that reaches current to the mst unless current is the root of a tree in the MSF
-          algen::Weight weight = algen::WEIGHT_MAX;
-          if(parent[current] != algen::VERTEXID_UNDEFINED) {
-            weight = q.get_key(current);
-            mst.push_back(algen::WEdge(parent[current], current, weight));
+          if(parent[current.second] != algen::VERTEXID_UNDEFINED) {
+            mst.push_back(algen::WEdge(parent[current.second], current.second, current.first));
           }
           q.pop();
           //document the JP order
           if(need_filtering_data) {
-            mst_edge_weights.push_back(weight);
-            renumbering[current] = counter;
+            mst_edge_weights.push_back(current.first);
+            renumbering[current.second] = counter;
             counter ++;
           }
           //update parent vertices and edges if needed
-          for (long i = adjacency_array_borders[current]; i < adjacency_array_borders[current + 1]; i++) {
+          for (long i = adjacency_array_borders[current.second]; i < adjacency_array_borders[current.second + 1]; i++) {
             if(edge_list[i].weight < q.get_key(edge_list[i].head)) {
               q.set_key(edge_list[i].head, edge_list[i].weight);
-              parent[edge_list[i].head] = current;
+              parent[edge_list[i].head] = current.second;
             }
           }
       }
