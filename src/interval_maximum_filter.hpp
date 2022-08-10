@@ -35,7 +35,8 @@ namespace kv_intervall_maximum_filter {
 
       algen::WEdgeList mst = jarnik_prim(sample_mst, num_vertices, false, weights , renumbering);
       // Push reverse edges
-      for (long i = 0; i < mst.size(); i++) {
+      long mst_size = mst.size();
+      for (long i = 0; i < mst_size; i++) {
         mst.push_back(algen::WEdge(mst[i].head, mst[i].tail, mst[i].weight));
       }
       return mst;
@@ -152,7 +153,7 @@ namespace kv_intervall_maximum_filter {
     }
 
     //very naive and intuitive function to get a random subset of a given list of edges
-    algen::WEdgeList random_subset(algen::WEdgeList source) {
+    algen::WEdgeList random_subset(const algen::WEdgeList& source) {
       auto gen = std::mt19937(std::random_device()());
       auto distr = std::uniform_int_distribution<algen::VertexId>(0, 9);  //adjust the range to change the size of the random sample
       algen::WEdgeList output;
@@ -161,6 +162,7 @@ namespace kv_intervall_maximum_filter {
           output.push_back(source[i]);
         }
       }
+      return output;
     }
 
     // Returns the position of the most significant non zero bit
