@@ -12,7 +12,7 @@ namespace kv_intervall_maximum_filter {
     algen::WEdgeList operator()(const algen::WEdgeList& edge_list,
                                 const algen::VertexId num_vertices) {
 
-      algen::WeightArray weights;
+      std::vector<algen::Weight> weights;
       algen::VertexArray renumbering(num_vertices, algen::VERTEXID_UNDEFINED);
 
       algen::WEdgeList sample_edges = random_subset(edge_list);
@@ -21,7 +21,17 @@ namespace kv_intervall_maximum_filter {
 
       construct_prefix_suffix_binary_tree(weights, num_vertices);
 
-      //TODO filtering here
+      // Filtering all edges to remove edges that are the heaviest edge on a cycle
+      for (long i = 0; i < edge_list.size(); i++) {
+        algen::WEdge cur = edge_list[i];
+        // Calculate which layer of the binary tree we must look at
+        uint64_t l = msb(cur.tail ^ cur.head);
+        // Add current edge if it is not the heaviest edge on a cycle
+        if ((cur.weight < prefix_suffix_binary_tree[l][cur.tail])
+              && (cur.weight < prefix_suffix_binary_tree[l][cur.head])) {
+          sample_mst.push_back(cur);
+        }
+      }
       algen::WEdgeList filtered_edge_list;
 
       algen::WEdgeList mst = jarnik_prim(filtered_edge_list, num_vertices, false, weights , renumbering);
@@ -105,9 +115,10 @@ namespace kv_intervall_maximum_filter {
     }
 
     // Constructs a binary tree of prefix and suffix maxima that can be used to find interval maxima
-    void construct_prefix_suffix_binary_tree(const algen::WeightArray& weights,
+    void construct_prefix_suffix_binary_tree(std::vector<algen::Weight>& weights,
                                         const algen::VertexId num_vertices) {
       uint64_t size = next_pow2(num_vertices);
+      weights.insert(weights.end(), size - weights.size(), std::numeric_limits<algen::Weight>::min());
       uint64_t layers = log2(size);
       prefix_suffix_binary_tree = std::vector<std::vector<algen::Weight>>(layers);
       prefix_suffix_binary_tree[0] = weights;
@@ -124,7 +135,10 @@ namespace kv_intervall_maximum_filter {
       }
     }
 
+    // Returns the maximum weight of a given array of weights
     algen::Weight find_maximum(const algen::WeightArray& weights, uint64_t l, uint64_t r) {
+      int size = weights.size();
+
       long max = 0;
       for (long j = l; j <= r; j++) {
         if (weights[j] > max) {
@@ -134,6 +148,7 @@ namespace kv_intervall_maximum_filter {
       return max;
     }
 
+    // Returns tne minimum y where y>=x and y is a power of two
     uint64_t next_pow2(uint64_t x) {
       return x == 1 ? 1 : 1<<(64-__builtin_clzl(x-1));
     }
@@ -141,7 +156,7 @@ namespace kv_intervall_maximum_filter {
     //very naive and intuitive function to get a random subset of a given list of edges
     algen::WEdgeList random_subset(algen::WEdgeList source) {
         auto gen = std::mt19937(std::random_device()());
-        auto distr = std::uniform_int_distribution<algen::VertexId>(0, 9);  //adjust the range to change the size of the random sample 
+        auto distr = std::uniform_int_distribution<algen::VertexId>(0, 9);  //adjust the range to change the size of the random sample
         algen::WEdgeList output;
         for (long i = 0; i < source.size(); i++) {
             if(distr(gen) == 0) {
@@ -150,6 +165,13 @@ namespace kv_intervall_maximum_filter {
         }
     }
 
+    // Returns the position of the most significant non zero bit
+    uint64_t msb(uint64_t x) {
+      return (63-__builtin_clzl(x));
+    }
+
+
+    static constexpr algen::Weight WEIGHT_MIN = std::numeric_limits<algen::Weight>::min();
     algen::WEdgeList adjacency_array;
     std::vector<algen::VertexId> adjacency_array_borders;
     std::vector<std::vector<algen::Weight>> prefix_suffix_binary_tree;
