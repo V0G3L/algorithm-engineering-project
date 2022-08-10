@@ -1,3 +1,4 @@
+//the basic interface any priority queue needs to meet in order to fulfill our needs
 class PriorityQueue {
 
 public:
