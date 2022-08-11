@@ -71,16 +71,13 @@ public:
     shiftUp(heap.size() - 1);
   }
 
-  //returns the current front of the queue
-  std::pair<algen::Weight, algen::VertexId> top() {
-    return heap[0];
-  }
-
-  //removes the current front from the queue
-  void pop() {
+  //removes the current front from the queue and returns it
+  std::pair<algen::Weight, algen::VertexId> pop() {
+    std::pair<algen::Weight, algen::VertexId> output = heap[0];
     swap(0, heap.size() - 1);
     heap.pop_back();
     shiftDown(0);
+    return output;
   }
 
   //returns the current priority of a given element with value 'val'

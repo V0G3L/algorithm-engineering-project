@@ -66,12 +66,11 @@ namespace kv_intervall_maximum_filter {
       long counter = 0; // to count the JP order. 0 being the first vertex added to the mst, num_vertices being the last
       algen::VertexArray parent(num_vertices, algen::VERTEXID_UNDEFINED); // saves the parent from which the vertex is currently reached
       while(!q.empty()) {
-        current = q.top();
+        current = q.pop();
         //add the edge that reaches current to the mst unless current is the root of a tree in the MSF
         if(parent[current.second] != algen::VERTEXID_UNDEFINED) {
           mst.push_back(algen::WEdge(parent[current.second], current.second, current.first));
         }
-        q.pop();
         //document the JP order
         if(need_filtering_data) {
           mst_edge_weights.push_back(current.first);
