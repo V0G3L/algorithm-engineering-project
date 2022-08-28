@@ -2,6 +2,10 @@
 
 #include "includes/definitions.hpp"
 #include "src/datastructures/priority_queue.hpp"
+#include "algorithm"
+#include "cmath"
+#include "random"
+//#include "iostream"
 
 namespace kv_intervall_maximum_filter {
   // This is an implementation of the I-Max-filter algorithm presented in this paper https://link.springer.com/chapter/10.1007/978-3-540-39658-1_61
@@ -62,11 +66,13 @@ namespace kv_intervall_maximum_filter {
         q.push({algen::WEIGHT_MAX, i});
       }
       std::pair<algen::Weight, algen::VertexId> current;
+      std::vector<bool> added_to_mst(num_vertices, false);
 
       long counter = 0; // to count the JP order. 0 being the first vertex added to the mst, num_vertices being the last
       algen::VertexArray parent(num_vertices, algen::VERTEXID_UNDEFINED); // saves the parent from which the vertex is currently reached
       while(!q.empty()) {
         current = q.pop();
+        added_to_mst[current.second] = true;
         //add the edge that reaches current to the mst unless current is the root of a tree in the MSF
         if(parent[current.second] != algen::VERTEXID_UNDEFINED) {
           mst.push_back(algen::WEdge(parent[current.second], current.second, current.first));
@@ -79,14 +85,21 @@ namespace kv_intervall_maximum_filter {
         }
         //update parent vertices and edges if needed
         for (long i = adjacency_array_borders[current.second]; i < adjacency_array_borders[current.second + 1]; i++) {
-          if(edge_list[i].weight < q.get_key(edge_list[i].head)) {
-            q.set_key(edge_list[i].head, edge_list[i].weight);
-            parent[edge_list[i].head] = current.second;
+          if(!added_to_mst[adjacency_array[i].head] && adjacency_array[i].weight < q.get_key(adjacency_array[i].head)) {
+            q.set_key(adjacency_array[i].head, adjacency_array[i].weight);
+            parent[adjacency_array[i].head] = current.second;
           }
         }
       }
       return mst;
     }
+
+    template <typename EdgeType>
+    struct TailHeadOrder {
+      bool operator()(const EdgeType& lhs, const EdgeType& rhs) const {
+        return std::tie(lhs.tail, lhs.head) < std::tie(rhs.tail, rhs.head);
+      }
+    };
 
     // Constructs an adjanceny array from a given list of edges
     void construct_adjacency_array(const algen::WEdgeList& edge_list,
@@ -94,7 +107,7 @@ namespace kv_intervall_maximum_filter {
       adjacency_array = edge_list;
       adjacency_array_borders= std::vector<algen::VertexId>(num_vertices+1,0);
 
-      std::sort(adjacency_array.begin(), adjacency_array.end(), algen::TailHeadOrder<algen::WEdge>());
+      std::sort(adjacency_array.begin(), adjacency_array.end(), TailHeadOrder<algen::WEdge>());
 
       algen::VertexId current_vertex = 0;
       adjacency_array_borders[0] = 0;

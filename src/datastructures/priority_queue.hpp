@@ -1,4 +1,5 @@
 #include <unordered_map>
+#include "assert.h"
 
 //this is the implementation of priority queue using a binary heap
 class PriorityQueue {
@@ -38,11 +39,11 @@ private:
     long minIndex = target;
 
     //check if the left child of the target (if it exists) has a smaller key
-    if(leftChild(target) <= heap.size() && heap[leftChild(target)].first < heap[minIndex].first) {
+    if(leftChild(target) < heap.size() && heap[leftChild(target)].first < heap[minIndex].first) {
       minIndex = leftChild(target);
     }
     //check if right child of the target (if it exists) has the smallest key
-    if(rightChild(target) <= heap.size() && heap[rightChild(target)].first < heap[minIndex].first) {
+    if(rightChild(target) < heap.size() && heap[rightChild(target)].first < heap[minIndex].first) {
       minIndex = rightChild(target);
     }
 
@@ -74,6 +75,7 @@ public:
   //removes the current front from the queue and returns it
   std::pair<algen::Weight, algen::VertexId> pop() {
     std::pair<algen::Weight, algen::VertexId> output = heap[0];
+    heap[0] = {std::numeric_limits<algen::Weight>::min(), algen::VERTEXID_UNDEFINED};
     swap(0, heap.size() - 1);
     heap.pop_back();
     shiftDown(0);

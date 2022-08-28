@@ -18,3 +18,6 @@ set_target_properties(imported_binaries_for_tests PROPERTIES IMPORTED_LOCATION "
 
 add_executable(test_edge_classification test_edge_classification.cpp)
 target_link_libraries(test_edge_classification PRIVATE base_target  imported_binaries_for_tests)
+
+add_executable(simple_mst_test simple_mst_test.cpp)
+target_link_libraries(simple_mst_test PRIVATE base_target  imported_binaries_for_tests)
