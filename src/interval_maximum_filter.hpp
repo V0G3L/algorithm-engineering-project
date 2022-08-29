@@ -20,23 +20,14 @@ namespace kv_intervall_maximum_filter {
       algen::VertexArray renumbering(num_vertices, algen::VERTEXID_UNDEFINED);
 
       algen::WEdgeList sample_edges = random_subset(edge_list);
-
-      //prints the random subset to asisst with bugfixing
-      std::cout << "The random subset is: ";
-      for (int i = 0; i < sample_edges.size(); i++) {
-        std::cout << sample_edges[i] << ", ";
+      // Push reverse edges. if both e = (a,b,w) and its reverse edge (b,a,w) are already part of the random set, this will create duplicates.
+      // In theory these duplicates shouldnt cause any issues 
+      long edge_list_size = sample_edges.size();
+      for (long i = 0; i < edge_list_size; i++) {
+        sample_edges.push_back(algen::WEdge(sample_edges[i].head, sample_edges[i].tail, sample_edges[i].weight));
       }
-      std::cout << "\n";
 
       algen::WEdgeList sample_mst = jarnik_prim(sample_edges, num_vertices, true, weights, renumbering);
-
-
-      //prints the mst of the random subset to asisst with bugfixing
-      std::cout << "The mst of the random subset is: ";
-      for (int i = 0; i < sample_mst.size(); i++) {
-        std::cout << sample_mst[i] << ", ";
-      }
-      std::cout << "\n";
 
       construct_prefix_suffix_binary_tree(weights, num_vertices);
 
