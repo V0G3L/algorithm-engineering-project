@@ -36,7 +36,7 @@ int main() {
   }
   std::cout << "\n";
 
-  std::cout << "The correct MST is: (0, 1, 5), (1, 0, 5), (0, 2, 5), (2, 0, 5), (1, 4, 2), (4, 1, 2), (4, 5, 1), (5, 4, 1), (5, 3, 3), (3, 5, 3)\n";
+  std::cout << "The correct MST is: (0, 1, 5), (1, 0, 5), (0, 2, 2), (2, 0, 2), (1, 4, 2), (4, 1, 2), (4, 5, 1), (5, 4, 1), (5, 3, 3), (3, 5, 3)\n";
 
   std::vector<algen::Weight> weights;
   algen::VertexArray renumbering(6, algen::VERTEXID_UNDEFINED);

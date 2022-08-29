@@ -5,7 +5,7 @@
 #include "algorithm"
 #include "cmath"
 #include "random"
-//#include "iostream"
+#include "iostream"
 
 namespace kv_intervall_maximum_filter {
   // This is an implementation of the I-Max-filter algorithm presented in this paper https://link.springer.com/chapter/10.1007/978-3-540-39658-1_61
@@ -21,7 +21,22 @@ namespace kv_intervall_maximum_filter {
 
       algen::WEdgeList sample_edges = random_subset(edge_list);
 
+      //prints the random subset to asisst with bugfixing
+      std::cout << "The random subset is: ";
+      for (int i = 0; i < sample_edges.size(); i++) {
+        std::cout << sample_edges[i] << ", ";
+      }
+      std::cout << "\n";
+
       algen::WEdgeList sample_mst = jarnik_prim(sample_edges, num_vertices, true, weights, renumbering);
+
+
+      //prints the mst of the random subset to asisst with bugfixing
+      std::cout << "The mst of the random subset is: ";
+      for (int i = 0; i < sample_mst.size(); i++) {
+        std::cout << sample_mst[i] << ", ";
+      }
+      std::cout << "\n";
 
       construct_prefix_suffix_binary_tree(weights, num_vertices);
 
@@ -29,10 +44,10 @@ namespace kv_intervall_maximum_filter {
       for (long i = 0; i < edge_list.size(); i++) {
         algen::WEdge cur = edge_list[i];
         // Calculate which layer of the binary tree we must look at
-        uint64_t l = msb(cur.tail ^ cur.head);
+        uint64_t l = msb(renumbering[cur.tail] ^ renumbering[cur.head]);
         // Add current edge if it is not the heaviest edge on a cycle
         if ((cur.weight < prefix_suffix_binary_tree[l][cur.tail])
-              && (cur.weight < prefix_suffix_binary_tree[l][cur.head])) {
+              && (cur.weight < prefix_suffix_binary_tree[l][renumbering[cur.head]])) {
           sample_mst.push_back(cur);
         }
       }
