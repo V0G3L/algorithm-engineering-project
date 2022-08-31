@@ -2,6 +2,21 @@
 #include "iostream"
 
 int main() {
+
+  kv_intervall_maximum_filter::PairingHeap q(4);
+  q.push({2,2});
+  q.push({1,1});
+  q.push({0,0});
+  q.push({3,3});
+  auto x = q.pop();
+  std::cout << x.first << "," << x.second << "\n";
+  x = q.pop();
+  std::cout << x.first << "," << x.second << "\n";
+  x = q.pop();
+  std::cout << x.first << "," << x.second << "\n";
+  x = q.pop();
+  std::cout << x.first << "," << x.second << "\n";
+
   algen::WEdgeList simple_graph;
   simple_graph.push_back(algen::WEdge(0, 1, 5));
   simple_graph.push_back(algen::WEdge(1, 0, 5));

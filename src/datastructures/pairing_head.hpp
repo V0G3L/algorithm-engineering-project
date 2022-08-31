@@ -1,5 +1,4 @@
 #include "includes/definitions.hpp"
-#include "includes/utils.hpp"
 #include "unordered_map"
 #include "random"
 #include "assert.h"
@@ -30,43 +29,49 @@ namespace kv_intervall_maximum_filter {
 
   public:
 
-    PairingHeap() {
-      size = 0;
+    PairingHeap(long size) {
       head = NULL;
+      heap.reserve(size);
     }
 
     //returns true if the queue is empty, false otherwise
     bool empty() {
-      return (size == 0);
+      return (heap.size() == 0);
     }
 
     //pushes a new element with value 'val' and priority 'key' to the priority queue
-    void push(algen::Weight key, algen::VertexId val) {
-      Element* new_elem = new Element(key,val);
-      head = meld(head, new_elem);
+    void push(std::pair<algen::Weight, algen::VertexId> input) {
+      //TODO test insert buffer
+      long index = heap.size();
+      index_map.insert({input.second, index});
+      heap.push_back(Element(input.first, input.second));
+      head = meld(head, &heap[index]);
     }
 
-    //returns the current front of the queue
-    algen::VertexId top() {
-      return head->value;
-    }
-
-    //removes the current front from the queue
-    void pop() {
+    //removes the current front from the queue and returns it
+    std::pair<algen::Weight, algen::VertexId> pop() {
+      assert(!empty());
+      std::pair<algen::Weight, algen::VertexId> output = {head->key,head->value};
       head = (merge_siblings(head->child));
+      long index = index_map.at(output.second);
+      heap[index] = heap[heap.size()-1];
+      heap.pop_back();
+      index_map[heap[heap.size()-1].value] = index;
+      index_map.erase(output.second);
+      return output;
     }
 
     //returns the current priority of a given element with value 'val'
     //returns algen::VERTEXID_UNDEFINED if there is no such element in the queue
     algen::Weight get_key(algen::VertexId val) {
       assert(index_map.find(val) != index_map.end());
-      return index_map.at(val).key;
+      return heap[index_map.at(val)].key;
     }
 
     //changes the priority of a given element with value 'val' to the priority 'new_key'
     void set_key(algen::VertexId val, algen::Weight new_key) {
       assert(index_map.find(val) != index_map.end());
-      Element* elem = &index_map.at(val);
+      Element* elem = &heap[index_map.at(val)];
       assert(new_key < elem->key);
       elem->key = new_key;
       if (elem->value != head->value) {
@@ -114,25 +119,28 @@ namespace kv_intervall_maximum_filter {
 
     //Merges all siblings by melding them from left to right in pairs, then merging the pairs from right to left
     Element* merge_siblings(Element* first_sibling) {
-      first_sibling->parent = NULL;
       if (first_sibling == NULL) {
         return first_sibling;
       } else if(first_sibling->right == NULL) {
+        first_sibling->parent = NULL;
         return first_sibling;
       } else {
         Element* second_sibling = first_sibling->right;
         Element* third_siblimg = second_sibling->right;
+        first_sibling->parent = NULL;
         first_sibling->right = NULL;
         second_sibling->left = NULL;
         second_sibling->parent = NULL;
         second_sibling->right = NULL;
-        third_siblimg->left = NULL;
+        if (third_siblimg != NULL) {
+          third_siblimg->left = NULL;
+        }
         return meld(meld(first_sibling, second_sibling), merge_siblings(third_siblimg));
       }
     }
 
-    uint64_t size;                                                    //size of heap
-    Element* head;                                                     //root of the heap
-    std::unordered_map<algen::VertexId, Element> index_map;           //maps a value to the corresponding element
+    Element* head;                                               //value of the root of the heap
+    std::vector<Element> heap;                                          //stores the elements of the heap
+    std::unordered_map<algen::VertexId, long> index_map;                //maps a value to the corresponding element
   };
 }

@@ -2,6 +2,7 @@
 
 #include "includes/definitions.hpp"
 #include "src/datastructures/priority_queue.hpp"
+#include "src/datastructures/pairing_head.hpp"
 #include "algorithm"
 #include "cmath"
 #include "random"
@@ -19,9 +20,9 @@ namespace kv_intervall_maximum_filter {
       std::vector<algen::Weight> weights;
       algen::VertexArray renumbering(num_vertices, algen::VERTEXID_UNDEFINED);
 
-      algen::WEdgeList sample_edges = random_subset(edge_list);
+      /*algen::WEdgeList sample_edges = random_subset(edge_list);
       // Push reverse edges. if both e = (a,b,w) and its reverse edge (b,a,w) are already part of the random set, this will create duplicates.
-      // In theory these duplicates shouldnt cause any issues 
+      // In theory these duplicates shouldn't cause any issues
       long edge_list_size = sample_edges.size();
       for (long i = 0; i < edge_list_size; i++) {
         sample_edges.push_back(algen::WEdge(sample_edges[i].head, sample_edges[i].tail, sample_edges[i].weight));
@@ -44,6 +45,8 @@ namespace kv_intervall_maximum_filter {
       }
 
       algen::WEdgeList mst = jarnik_prim(sample_mst, num_vertices, false, weights , renumbering);
+      */
+      algen::WEdgeList mst = jarnik_prim(edge_list, num_vertices, false, weights , renumbering);
       // Push reverse edges
       long mst_size = mst.size();
       for (long i = 0; i < mst_size; i++) {
@@ -66,7 +69,8 @@ namespace kv_intervall_maximum_filter {
       algen::WEdgeList mst;
 
       // initialise priority queue
-      PriorityQueue q;
+      //PriorityQueue q;
+      PairingHeap q(num_vertices);
       q.push({0, 0});
       for (long i = 1; i < num_vertices; i++) {
         q.push({algen::WEIGHT_MAX, i});
