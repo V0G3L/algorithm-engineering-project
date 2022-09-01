@@ -20,7 +20,7 @@ namespace kv_intervall_maximum_filter {
       std::vector<algen::Weight> weights;
       algen::VertexArray renumbering(num_vertices, algen::VERTEXID_UNDEFINED);
 
-      /*algen::WEdgeList sample_edges = random_subset(edge_list);
+      algen::WEdgeList sample_edges = random_subset(edge_list);
       // Push reverse edges. if both e = (a,b,w) and its reverse edge (b,a,w) are already part of the random set, this will create duplicates.
       // In theory these duplicates shouldn't cause any issues
       long edge_list_size = sample_edges.size();
@@ -28,7 +28,21 @@ namespace kv_intervall_maximum_filter {
         sample_edges.push_back(algen::WEdge(sample_edges[i].head, sample_edges[i].tail, sample_edges[i].weight));
       }
 
+      //prints the random set for testing purposes.
+      /*std::cout << "The random sample is: ";
+      for (int i = 0; i < sample_edges.size(); i++) {
+      std::cout << sample_edges[i] << ", ";
+      }
+      std::cout << "\n";*/
+
       algen::WEdgeList sample_mst = jarnik_prim(sample_edges, num_vertices, true, weights, renumbering);
+
+      //prints the mst of the random set for testing purposes.
+      /*std::cout << "The mst of the random sample is: ";
+      for (int i = 0; i < sample_mst.size(); i++) {
+      std::cout << sample_mst[i] << ", ";
+      }
+      std::cout << "\n";*/
 
       construct_prefix_suffix_binary_tree(weights, num_vertices);
 
@@ -38,20 +52,14 @@ namespace kv_intervall_maximum_filter {
         // Calculate which layer of the binary tree we must look at
         uint64_t l = msb(renumbering[cur.tail] ^ renumbering[cur.head]);
         // Add current edge if it is not the heaviest edge on a cycle
-        if ((cur.weight < prefix_suffix_binary_tree[l][cur.tail])
-              && (cur.weight < prefix_suffix_binary_tree[l][renumbering[cur.head]])) {
+        if ((cur.weight < prefix_suffix_binary_tree[l][renumbering[cur.tail]])
+              || (cur.weight < prefix_suffix_binary_tree[l][renumbering[cur.head]])) {
           sample_mst.push_back(cur);
         }
       }
 
       algen::WEdgeList mst = jarnik_prim(sample_mst, num_vertices, false, weights , renumbering);
-      */
-      algen::WEdgeList mst = jarnik_prim(edge_list, num_vertices, false, weights , renumbering);
-      // Push reverse edges
-      long mst_size = mst.size();
-      for (long i = 0; i < mst_size; i++) {
-        mst.push_back(algen::WEdge(mst[i].head, mst[i].tail, mst[i].weight));
-      }
+
       return mst;
     }
 
@@ -69,8 +77,7 @@ namespace kv_intervall_maximum_filter {
       algen::WEdgeList mst;
 
       // initialise priority queue
-      //PriorityQueue q;
-      PairingHeap q(num_vertices);
+      PriorityQueue q;
       q.push({0, 0});
       for (long i = 1; i < num_vertices; i++) {
         q.push({algen::WEIGHT_MAX, i});
@@ -86,6 +93,7 @@ namespace kv_intervall_maximum_filter {
         //add the edge that reaches current to the mst unless current is the root of a tree in the MSF
         if(parent[current.second] != algen::VERTEXID_UNDEFINED) {
           mst.push_back(algen::WEdge(parent[current.second], current.second, current.first));
+          mst.push_back(algen::WEdge(current.second, parent[current.second], current.first));
         }
         //document the JP order
         if(need_filtering_data) {
