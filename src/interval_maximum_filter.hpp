@@ -185,10 +185,10 @@ namespace kv_intervall_maximum_filter {
     //very naive and intuitive function to get a random subset of a given list of edges
     algen::WEdgeList random_subset(const algen::WEdgeList& source) {
       auto gen = std::mt19937(std::random_device()());
-      auto distr = std::uniform_int_distribution<algen::VertexId>(0, 9);  //adjust the range to change the size of the random sample
+      auto distr = std::uniform_int_distribution<algen::VertexId>(0, 99);  //adjust the range to modify the divider of the random chance e.g. (0, 6) results in a x/7 chance
       algen::WEdgeList output;
       for (long i = 0; i < source.size(); i++) {
-        if(distr(gen) == 0) {
+        if(distr(gen) <= 8) {                                     //adjust upper bound to modify the denominator of the random chance e.g. <= 3 results in a 4/y chance
           output.push_back(source[i]);
         }
       }
