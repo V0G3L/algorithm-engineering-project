@@ -1,3 +1,4 @@
+#include <iostream>
 #include "includes/definitions.hpp"
 #include "unordered_map"
 #include "random"
@@ -10,18 +11,18 @@ namespace kv_intervall_maximum_filter {
   public:
     algen::Weight key;
     algen::VertexId value;
-    Element* left;
-    Element* right;
-    Element* child;
-    Element* parent;
+    algen::VertexId left;
+    algen::VertexId right;
+    algen::VertexId child;
+    algen::VertexId parent;
 
     Element(algen::Weight key, algen::VertexId value) {
       this->key = key;
       this->value = value;
-      left = NULL;
-      right = NULL;
-      child = NULL;
-      parent = NULL;
+      left = -1;
+      right = -1;
+      child = -1;
+      parent = -1;
     }
   };
 
@@ -44,7 +45,7 @@ namespace kv_intervall_maximum_filter {
       //TODO test insert buffer
       long index = heap.size();
       index_map.insert({input.second, index});
-      heap.push_back(Element(input.first, input.second));
+      heap.emplace_back(input.first, input.second);
       head = meld(head, &heap[index]);
     }
 
@@ -52,11 +53,11 @@ namespace kv_intervall_maximum_filter {
     std::pair<algen::Weight, algen::VertexId> pop() {
       assert(!empty());
       std::pair<algen::Weight, algen::VertexId> output = {head->key,head->value};
-      head = (merge_siblings(head->child));
-      long index = index_map.at(output.second);
+      head = merge_siblings(&heap[index_map[head->child]]);
+      long index = index_map[output.second];
       heap[index] = heap[heap.size()-1];
-      heap.pop_back();
       index_map[heap[heap.size()-1].value] = index;
+      heap.pop_back();
       index_map.erase(output.second);
       return output;
     }
@@ -65,32 +66,29 @@ namespace kv_intervall_maximum_filter {
     //returns algen::VERTEXID_UNDEFINED if there is no such element in the queue
     algen::Weight get_key(algen::VertexId val) {
       assert(index_map.find(val) != index_map.end());
-      return heap[index_map.at(val)].key;
+      return heap[index_map[val]].key;
     }
 
     //changes the priority of a given element with value 'val' to the priority 'new_key'
     void set_key(algen::VertexId val, algen::Weight new_key) {
       assert(index_map.find(val) != index_map.end());
-      Element* elem = &heap[index_map.at(val)];
+      Element* elem = &heap[index_map[val]];
       assert(new_key < elem->key);
       elem->key = new_key;
       if (elem->value != head->value) {
-        Element* left_sibling = elem->left;
-        Element* right_sibling = elem->right;
-        if (left_sibling == NULL) {
-          elem->parent->child = elem->right;
+        if (elem->left == -1) {
+          (heap[index_map[elem->parent]]).child = elem->right;
+        } else {
+          (heap[index_map[elem->left]]).right = elem->right;
         }
-        if (left_sibling != NULL) {
-          left_sibling->right = right_sibling;
+        if (elem->right != -1) {
+          (heap[index_map[elem->right]]).left = elem->left;
         }
-        if (right_sibling != NULL) {
-          right_sibling->left = left_sibling;
-        }
-        elem->parent = NULL;
-        elem->right = NULL;
-        elem->left = NULL;
+        elem->parent = -1;
+        elem->right = -1;
+        elem->left = -1;
         //TODO test not cutting the whole subtree
-        meld(head, elem);
+        head = meld(head, elem);
       }
     }
 
@@ -104,16 +102,20 @@ namespace kv_intervall_maximum_filter {
         return a;
       } if (a->key < b->key) {
         b->right = a->child;
-        if (a->child != NULL) {
-          a->child->left = b;
+        if (a->child != -1) {
+          (heap[index_map[a->child]]).left = b->value;
         }
-        a->child = b;
+        a->child = b->value;
+        b->parent = a->value;
+        return a;
       } else {
         a->right = b->child;
-        if (b->child != NULL) {
-          b->child->left = a;
+        if (b->child != -1) {
+          (heap[index_map[b->child]]).left = a->value;
         }
-        b->child = a;
+        b->child = a->value;
+        a->parent = b->value;
+        return b;
       }
     }
 
@@ -121,19 +123,22 @@ namespace kv_intervall_maximum_filter {
     Element* merge_siblings(Element* first_sibling) {
       if (first_sibling == NULL) {
         return first_sibling;
-      } else if(first_sibling->right == NULL) {
-        first_sibling->parent = NULL;
+      } else if(first_sibling->right == -1) {
+        first_sibling->parent = -1;
         return first_sibling;
       } else {
-        Element* second_sibling = first_sibling->right;
-        Element* third_siblimg = second_sibling->right;
-        first_sibling->parent = NULL;
-        first_sibling->right = NULL;
-        second_sibling->left = NULL;
-        second_sibling->parent = NULL;
-        second_sibling->right = NULL;
+        Element* second_sibling = &heap[index_map[first_sibling->right]];
+        Element *third_siblimg = NULL;
+        if (second_sibling->right != -1) {
+          third_siblimg = &heap[index_map[second_sibling->right]];
+        }
+        first_sibling->parent = -1;
+        first_sibling->right = -1;
+        second_sibling->left = -1;
+        second_sibling->parent = -1;
+        second_sibling->right = -1;
         if (third_siblimg != NULL) {
-          third_siblimg->left = NULL;
+          third_siblimg->left = -1;
         }
         return meld(meld(first_sibling, second_sibling), merge_siblings(third_siblimg));
       }
