@@ -56,9 +56,13 @@ namespace kv_intervall_maximum_filter {
       head = merge_siblings(&heap[index_map[head->child]]);
       long index = index_map[output.second];
       heap[index] = heap[heap.size()-1];
-      index_map[heap[heap.size()-1].value] = index;
+      algen::VertexId moved_value = heap[heap.size()-1].value;
+      index_map[moved_value] = index;
       heap.pop_back();
       index_map.erase(output.second);
+      if (moved_value == head->value) {
+        head = &heap[index_map[moved_value]];
+      }
       return output;
     }
 
@@ -100,7 +104,8 @@ namespace kv_intervall_maximum_filter {
         return b;
       } else if (b == NULL) {
         return a;
-      } if (a->key < b->key) {
+      }
+      if (a->key <= b->key) {
         b->right = a->child;
         if (a->child != -1) {
           (heap[index_map[a->child]]).left = b->value;

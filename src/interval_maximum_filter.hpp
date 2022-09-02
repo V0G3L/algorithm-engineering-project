@@ -77,7 +77,8 @@ namespace kv_intervall_maximum_filter {
       algen::WEdgeList mst;
 
       // initialise priority queue
-      PriorityQueue q;
+      //PriorityQueue q;
+      PairingHeap q(num_vertices);
       q.push({0, 0});
       for (long i = 1; i < num_vertices; i++) {
         q.push({algen::WEIGHT_MAX, i});
