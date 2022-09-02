@@ -119,7 +119,7 @@ namespace kv_intervall_maximum_filter {
       }
     };
 
-    // Constructs an adjanceny array from a given list of edges
+    // Constructs an adjacency array from a given list of edges
     void construct_adjacency_array(const algen::WEdgeList& edge_list,
                                    const algen::VertexId num_vertices) {
       adjacency_array = edge_list;
@@ -205,5 +205,104 @@ namespace kv_intervall_maximum_filter {
     algen::WEdgeList adjacency_array;
     std::vector<algen::VertexId> adjacency_array_borders;
     std::vector<std::vector<algen::Weight>> prefix_suffix_binary_tree;
+  };
+
+  //algorithm just using our implementation of jarnik prim used as a contender to compare against
+  class CustomJarnikPrim {
+
+  public:
+    algen::WEdgeList operator()(const algen::WEdgeList& edge_list,
+                                const algen::VertexId num_vertices) {
+
+      std::vector<algen::Weight> weights;
+      algen::VertexArray renumbering(num_vertices, algen::VERTEXID_UNDEFINED);
+
+      algen::WEdgeList mst = jarnik_prim(edge_list, num_vertices, false, weights , renumbering);
+
+      return mst;
+    }
+
+  private:
+    // Implementation of the Jarnik-Prim Algorithm
+    // If need_filtering_data is set the algorithm will collect the weights of all edges that are added to the MST in
+    // mst_edge_weights and for every vertex the renumbering array will contain in which step the vertex was added to
+    // the MST
+    algen::WEdgeList jarnik_prim(const algen::WEdgeList& edge_list,
+                                 const algen::VertexId num_vertices,
+                                 const bool need_filtering_data,
+                                 algen::WeightArray& mst_edge_weights,
+                                 algen::VertexArray& renumbering) {
+      construct_adjacency_array(edge_list, num_vertices);
+      algen::WEdgeList mst;
+
+      // initialise priority queue
+      PriorityQueue q;
+      q.push({0, 0});
+      for (long i = 1; i < num_vertices; i++) {
+        q.push({algen::WEIGHT_MAX, i});
+      }
+      std::pair<algen::Weight, algen::VertexId> current;
+      std::vector<bool> added_to_mst(num_vertices, false);
+
+      long counter = 0; // to count the JP order. 0 being the first vertex added to the mst, num_vertices being the last
+      algen::VertexArray parent(num_vertices, algen::VERTEXID_UNDEFINED); // saves the parent from which the vertex is currently reached
+      while(!q.empty()) {
+        current = q.pop();
+        added_to_mst[current.second] = true;
+        //add the edge that reaches current to the mst unless current is the root of a tree in the MSF
+        if(parent[current.second] != algen::VERTEXID_UNDEFINED) {
+          mst.push_back(algen::WEdge(parent[current.second], current.second, current.first));
+          mst.push_back(algen::WEdge(current.second, parent[current.second], current.first));
+        }
+        //document the JP order
+        if(need_filtering_data) {
+          mst_edge_weights.push_back(current.first);
+          renumbering[current.second] = counter;
+          counter ++;
+        }
+        //update parent vertices and edges if needed
+        for (long i = adjacency_array_borders[current.second]; i < adjacency_array_borders[current.second + 1]; i++) {
+          if(!added_to_mst[adjacency_array[i].head] && adjacency_array[i].weight < q.get_key(adjacency_array[i].head)) {
+            q.set_key(adjacency_array[i].head, adjacency_array[i].weight);
+            parent[adjacency_array[i].head] = current.second;
+          }
+        }
+      }
+      return mst;
+    }
+
+    template <typename EdgeType>
+    struct TailHeadOrder {
+      bool operator()(const EdgeType& lhs, const EdgeType& rhs) const {
+        return std::tie(lhs.tail, lhs.head) < std::tie(rhs.tail, rhs.head);
+      }
+    };
+
+    // Constructs an adjacency array from a given list of edges
+    void construct_adjacency_array(const algen::WEdgeList& edge_list,
+                                   const algen::VertexId num_vertices) {
+      adjacency_array = edge_list;
+      adjacency_array_borders= std::vector<algen::VertexId>(num_vertices+1,0);
+
+      std::sort(adjacency_array.begin(), adjacency_array.end(), TailHeadOrder<algen::WEdge>());
+
+      algen::VertexId current_vertex = 0;
+      adjacency_array_borders[0] = 0;
+      for (long i = 0; i < adjacency_array.size(); i++) {
+        if (adjacency_array[i].tail != current_vertex) {
+          algen::VertexId next_vertex = adjacency_array[i].tail;
+          for (long j = 0; j < adjacency_array[i].tail - current_vertex; j++) {
+            adjacency_array_borders[next_vertex-j] = i;
+          }
+          current_vertex = next_vertex;
+        }
+      }
+      for (long j = 0; j < num_vertices - current_vertex; j++) {
+        adjacency_array_borders[num_vertices-j] = adjacency_array.size();
+      }
+    }
+
+    algen::WEdgeList adjacency_array;
+    std::vector<algen::VertexId> adjacency_array_borders;
   };
 }

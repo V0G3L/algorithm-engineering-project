@@ -51,6 +51,11 @@ constexpr std::tuple contenders{
               [] { return kv_intervall_maximum_filter::IntervallMaximumFilter();
     }},
 
+    // The custom made Jarnik Prim Algorithm used in I-Max-Filter Algorithm implemeted by Jens Kienle and Simon Vögele
+    Contender{"custom_jarnik_prim",
+              [] { return kv_intervall_maximum_filter::CustomJarnikPrim();
+    }},
+
     // Jarnik-Prim with inefficient addressable PQ
 //    Contender{"naive_jarnik_prim", [] { return NaiveJarnikPrim(); }},
 
