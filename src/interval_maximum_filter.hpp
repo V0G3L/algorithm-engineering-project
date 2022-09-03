@@ -21,13 +21,7 @@ namespace kv_intervall_maximum_filter {
       algen::VertexArray renumbering(num_vertices, algen::VERTEXID_UNDEFINED);
 
       algen::WEdgeList sample_edges;
-      random_subset(edge_list, sample_edges);
-      // Push reverse edges. if both e = (a,b,w) and its reverse edge (b,a,w) are already part of the random set, this will create duplicates.
-      // In theory these duplicates shouldn't cause any issues
-      long edge_list_size = sample_edges.size();
-      for (long i = 0; i < edge_list_size; i++) {
-        sample_edges.push_back(algen::WEdge(sample_edges[i].head, sample_edges[i].tail, sample_edges[i].weight));
-      }
+      random_subset(edge_list, (int) sqrt(num_vertices * 0.5 * edge_list.size()), sample_edges);
 
       //prints the random set for testing purposes.
       /*std::cout << "The random sample is: ";
@@ -186,15 +180,23 @@ namespace kv_intervall_maximum_filter {
     }
 
     //very naive and intuitive function to get a random subset of a given list of edges
-    void random_subset(const algen::WEdgeList& source, algen::WEdgeList& output) {
+    void random_subset(const algen::WEdgeList& source, int size, algen::WEdgeList& output) {
+      std::vector<bool> chosen(source.size(), false);             // true if the respective edge with the same index is already part of the random set or not
       auto gen = std::mt19937(std::random_device()());
-      auto distr = std::uniform_int_distribution<algen::VertexId>(0, 99);  //adjust the range to modify the divider of the random chance e.g. (0, 6) results in a x/7 chance
-      for (long i = 0; i < source.size(); i++) {
-        if(distr(gen) <= 8) {                                     //adjust upper bound to modify the denominator of the random chance e.g. <= 3 results in a 4/y chance
-          output.push_back(source[i]);
+      auto distr = std::uniform_int_distribution<algen::VertexId>(0, source.size() - 1);
+      int random;
+      for (long i = 0; i < size; i++) {
+        auto random = distr(gen);
+        while (chosen[random]) {
+          random = distr(gen);
+        }
+        chosen[random] = true;
+        output.push_back(source[random]);
+        output.push_back(algen::WEdge(source[random].head, source[random].tail, source[random].weight)); // the reverse edge
+        // if both e = (a,b,w) and its reverse edge (b,a,w) are part of the random set, this will create duplicates.
+        // In theory these duplicates shouldn't cause any issues outside of effectively reducing the size of the set
         }
       }
-    }
 
     // Returns the position of the most significant non zero bit
     uint64_t msb(uint64_t x) {
