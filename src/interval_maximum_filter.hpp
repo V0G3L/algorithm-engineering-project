@@ -20,7 +20,8 @@ namespace kv_intervall_maximum_filter {
       std::vector<algen::Weight> weights;
       algen::VertexArray renumbering(num_vertices, algen::VERTEXID_UNDEFINED);
 
-      algen::WEdgeList sample_edges = random_subset(edge_list);
+      algen::WEdgeList sample_edges;
+      random_subset(edge_list, sample_edges);
       // Push reverse edges. if both e = (a,b,w) and its reverse edge (b,a,w) are already part of the random set, this will create duplicates.
       // In theory these duplicates shouldn't cause any issues
       long edge_list_size = sample_edges.size();
@@ -35,7 +36,8 @@ namespace kv_intervall_maximum_filter {
       }
       std::cout << "\n";*/
 
-      algen::WEdgeList sample_mst = jarnik_prim(sample_edges, num_vertices, true, weights, renumbering);
+      algen::WEdgeList sample_mst;
+      jarnik_prim(sample_edges, num_vertices, true, weights, renumbering, sample_mst);
 
       //prints the mst of the random set for testing purposes.
       /*std::cout << "The mst of the random sample is: ";
@@ -58,7 +60,8 @@ namespace kv_intervall_maximum_filter {
         }
       }
 
-      algen::WEdgeList mst = jarnik_prim(sample_mst, num_vertices, false, weights , renumbering);
+      algen::WEdgeList mst;
+      jarnik_prim(sample_mst, num_vertices, false, weights , renumbering, mst);
 
       return mst;
     }
@@ -68,17 +71,17 @@ namespace kv_intervall_maximum_filter {
     // If need_filtering_data is set the algorithm will collect the weights of all edges that are added to the MST in
     // mst_edge_weights and for every vertex the renumbering array will contain in which step the vertex was added to
     // the MST
-    algen::WEdgeList jarnik_prim(const algen::WEdgeList& edge_list,
-                                 const algen::VertexId num_vertices,
-                                 const bool need_filtering_data,
-                                 algen::WeightArray& mst_edge_weights,
-                                 algen::VertexArray& renumbering) {
+    void jarnik_prim(const algen::WEdgeList& edge_list,
+                    const algen::VertexId num_vertices,
+                    const bool need_filtering_data,
+                    algen::WeightArray& mst_edge_weights,
+                    algen::VertexArray& renumbering,
+                    algen::WEdgeList& mst) {                //the result mst
       construct_adjacency_array(edge_list, num_vertices);
-      algen::WEdgeList mst;
 
       // initialise priority queue
-      //PriorityQueue q;
-      PairingHeap q(num_vertices);
+      PriorityQueue q;
+      //PairingHeap q(num_vertices);
       q.push({0, 0});
       for (long i = 1; i < num_vertices; i++) {
         q.push({algen::WEIGHT_MAX, i});
@@ -110,7 +113,6 @@ namespace kv_intervall_maximum_filter {
           }
         }
       }
-      return mst;
     }
 
     template <typename EdgeType>
@@ -184,16 +186,14 @@ namespace kv_intervall_maximum_filter {
     }
 
     //very naive and intuitive function to get a random subset of a given list of edges
-    algen::WEdgeList random_subset(const algen::WEdgeList& source) {
+    void random_subset(const algen::WEdgeList& source, algen::WEdgeList& output) {
       auto gen = std::mt19937(std::random_device()());
       auto distr = std::uniform_int_distribution<algen::VertexId>(0, 99);  //adjust the range to modify the divider of the random chance e.g. (0, 6) results in a x/7 chance
-      algen::WEdgeList output;
       for (long i = 0; i < source.size(); i++) {
         if(distr(gen) <= 8) {                                     //adjust upper bound to modify the denominator of the random chance e.g. <= 3 results in a 4/y chance
           output.push_back(source[i]);
         }
       }
-      return output;
     }
 
     // Returns the position of the most significant non zero bit
@@ -218,7 +218,8 @@ namespace kv_intervall_maximum_filter {
       std::vector<algen::Weight> weights;
       algen::VertexArray renumbering(num_vertices, algen::VERTEXID_UNDEFINED);
 
-      algen::WEdgeList mst = jarnik_prim(edge_list, num_vertices, false, weights , renumbering);
+      algen::WEdgeList mst;
+      jarnik_prim(edge_list, num_vertices, false, weights , renumbering, mst);
 
       return mst;
     }
@@ -228,13 +229,13 @@ namespace kv_intervall_maximum_filter {
     // If need_filtering_data is set the algorithm will collect the weights of all edges that are added to the MST in
     // mst_edge_weights and for every vertex the renumbering array will contain in which step the vertex was added to
     // the MST
-    algen::WEdgeList jarnik_prim(const algen::WEdgeList& edge_list,
-                                 const algen::VertexId num_vertices,
-                                 const bool need_filtering_data,
-                                 algen::WeightArray& mst_edge_weights,
-                                 algen::VertexArray& renumbering) {
+    void jarnik_prim(const algen::WEdgeList& edge_list,
+                    const algen::VertexId num_vertices,
+                    const bool need_filtering_data,
+                    algen::WeightArray& mst_edge_weights,
+                    algen::VertexArray& renumbering,
+                    algen::WEdgeList& mst) {
       construct_adjacency_array(edge_list, num_vertices);
-      algen::WEdgeList mst;
 
       // initialise priority queue
       PriorityQueue q;
@@ -269,7 +270,6 @@ namespace kv_intervall_maximum_filter {
           }
         }
       }
-      return mst;
     }
 
     template <typename EdgeType>
