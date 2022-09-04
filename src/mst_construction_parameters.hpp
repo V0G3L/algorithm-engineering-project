@@ -47,12 +47,12 @@ constexpr std::tuple contenders{
               }},
 
     // I-Max-Filter Algorithm implemeted by Jens Kienle and Simon Vögele
-    Contender{"kv_intervall_maximum_filter_bh",
+    Contender{"kv_intervall_maximum_filter",
               [] { return kv_intervall_maximum_filter::IntervallMaximumFilter();
     }},
 
     // Jarnik-Prim with inefficient addressable PQ
-//    Contender{"naive_jarnik_prim", [] { return NaiveJarnikPrim(); }},
+    //    Contender{"naive_jarnik_prim", [] { return NaiveJarnikPrim(); }},
 
     // An example returning a badly formatted edge list
     // Contender{"outputs_badly_formatted_edge_list",
@@ -92,9 +92,9 @@ struct Experiment {
 
 struct ExperimentSuite {
   std::size_t log_n_begin = 14;
-  std::size_t log_n_end = 17;             //default 17
+  std::size_t log_n_end = 17;
   std::size_t edge_factor_begin = 1;
-  std::size_t edge_factor_end = 256;      //default 256
+  std::size_t edge_factor_end = 256;
   algen::Weight max_weight = 255;
   std::size_t step_size_n = 1;
   std::size_t step_size_edge_factor = 2;

@@ -49,8 +49,8 @@ namespace kv_intervall_maximum_filter {
   private:
     // Implementation of the Jarnik-Prim Algorithm
     // If need_filtering_data is set the algorithm will collect the weights of all edges that are added to the MST in
-    // mst_edge_weights and for every vertex the renumbering array will contain in which step the vertex was added to
-    // the MST
+    // mst_edge_weights and for every vertex the renumbering array will contain in which step the vertex was added to the MST
+    // mst is a pointer to the output array for the resulting mst
     void jarnik_prim(const algen::WEdgeList& edge_list,
                     const algen::VertexId num_vertices,
                     const bool need_filtering_data,
@@ -60,7 +60,7 @@ namespace kv_intervall_maximum_filter {
       construct_adjacency_array(edge_list, num_vertices);
 
       // initialise priority queue
-      // Use the commented declaration of q instead to use binary heaps
+      // Use the commented declaration of q instead to use binary heaps instead of pairing heaps
       // PriorityQueue q;
       PairingHeap q(num_vertices);
       q.push({0, 0});
@@ -189,7 +189,6 @@ namespace kv_intervall_maximum_filter {
     uint64_t msb(uint64_t x) {
       return (63-__builtin_clzl(x));
     }
-
 
     static constexpr algen::Weight WEIGHT_MIN = std::numeric_limits<algen::Weight>::min();
     algen::WEdgeList adjacency_array;
