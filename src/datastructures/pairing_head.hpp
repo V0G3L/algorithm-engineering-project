@@ -42,7 +42,6 @@ namespace kv_intervall_maximum_filter {
 
     //pushes a new element with value 'val' and priority 'key' to the priority queue
     void push(std::pair<algen::Weight, algen::VertexId> input) {
-      //TODO test insert buffer
       long index = heap.size();
       index_map.insert({input.second, index});
       heap.emplace_back(input.first, input.second);
@@ -91,7 +90,6 @@ namespace kv_intervall_maximum_filter {
         elem->parent = -1;
         elem->right = -1;
         elem->left = -1;
-        //TODO test not cutting the whole subtree
         head = meld(head, elem);
       }
     }
